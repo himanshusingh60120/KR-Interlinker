@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KR Master Interlinker</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
+  
+  header { background: linear-gradient(135deg, #1a1f2e, #242938); border-bottom: 1px solid #2d3748; padding: 18px 28px; display: flex; align-items: center; gap: 14px; }
+  header .logo { background: linear-gradient(135deg, #6366f1, #8b5cf6); width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; color: white; }
+  header h1 { font-size: 18px; font-weight: 700; color: #f1f5f9; }
+  header .subtitle { font-size: 12px; color: #64748b; margin-top: 2px; }
+  header .badge { margin-left: auto; background: #1e293b; border: 1px solid #334155; border-radius: 20px; padding: 4px 12px; font-size: 12px; color: #94a3b8; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
+
+  .setup-section { background: #1e293b; border: 1px dashed #3b82f6; border-radius: 14px; padding: 20px; margin-bottom: 24px; transition: all 0.3s; }
+  .setup-section.success { border-color: #10b981; background: #064e3b20; }
+  .setup-section label { font-size: 13px; font-weight: 600; color: #60a5fa; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .stats-bar { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+  .stat { background: #1e293b; border: 1px solid #2d3748; border-radius: 10px; padding: 10px 16px; flex: 1; min-width: 130px; }
+  .stat .num { font-size: 20px; font-weight: 800; color: #6366f1; }
+  .stat .lbl { font-size: 11px; color: #64748b; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .input-section { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 14px; padding: 20px; margin-bottom: 20px; }
+  .input-section label { font-size: 13px; font-weight: 600; color: #94a3b8; display: block; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  textarea { width: 100%; background: #0f1117; border: 1px solid #2d3748; border-radius: 10px; color: #e2e8f0; font-size: 14px; line-height: 1.6; padding: 14px; resize: vertical; min-height: 200px; font-family: inherit; transition: border-color 0.2s; }
+  textarea:focus { outline: none; border-color: #6366f1; }
+  textarea::placeholder { color: #374151; }
+
+  .options-row { display: flex; gap: 12px; margin-top: 14px; flex-wrap: wrap; align-items: center; }
+  .filter-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .filter-btn { background: #1e293b; border: 1px solid #2d3748; border-radius: 6px; padding: 6px 14px; font-size: 12px; color: #64748b; cursor: pointer; transition: all 0.15s; }
+  .filter-btn.active { background: #312e81; border-color: #6366f1; color: #a5b4fc; }
+  .filter-btn:hover { border-color: #4f46e5; }
+
+  .count-select { background: #1e293b; border: 1px solid #2d3748; border-radius: 6px; padding: 6px 10px; font-size: 12px; color: #94a3b8; cursor: pointer; }
+
+  .run-btn { margin-left: auto; background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none; border-radius: 8px; color: white; font-size: 14px; font-weight: 700; padding: 10px 24px; cursor: pointer; transition: opacity 0.2s; display: flex; align-items: center; gap: 8px; }
+  .run-btn:hover { opacity: 0.88; }
+  .run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .loading { display: none; text-align: center; padding: 48px 20px; }
+  .spinner { width: 40px; height: 40px; border: 3px solid #1e293b; border-top-color: #6366f1; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading p { color: #64748b; font-size: 14px; }
+
+  .results-section { display: none; }
+  .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+  .results-header h2 { font-size: 15px; font-weight: 700; color: #f1f5f9; }
+  .copy-all-btn { background: #1e293b; border: 1px solid #2d3748; border-radius: 6px; padding: 6px 14px; font-size: 12px; color: #94a3b8; cursor: pointer; transition: all 0.15s; }
+  .copy-all-btn:hover { border-color: #6366f1; color: #a5b4fc; }
+
+  table { width: 100%; border-collapse: collapse; background: #1a1f2e; border: 1px solid #2d3748; border-radius: 14px; overflow: hidden; }
+  thead th { background: #242938; padding: 12px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; text-align: left; }
+  tbody tr { border-top: 1px solid #1e293b; transition: background 0.1s; }
+  tbody tr:hover { background: #1e293b; }
+  td { padding: 12px 16px; font-size: 13px; vertical-align: top; }
+  td.anchor { color: #f1f5f9; font-weight: 600; }
+  td.url a { color: #818cf8; text-decoration: none; word-break: break-all; font-size: 12px; }
+  td.url a:hover { text-decoration: underline; }
+  td.type span { border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+  .type-report span { background: #1e3a5f; color: #60a5fa; }
+  .type-blog span { background: #1e3b2e; color: #4ade80; }
+  .type-press span { background: #3b2c1e; color: #fb923c; }
+  td.reason { color: #64748b; font-size: 12px; line-height: 1.5; }
+  td.copy-cell { text-align: center; }
+  .copy-link-btn { background: transparent; border: 1px solid #2d3748; border-radius: 5px; padding: 4px 8px; color: #64748b; font-size: 11px; cursor: pointer; transition: all 0.15s; }
+  .copy-link-btn:hover { border-color: #6366f1; color: #a5b4fc; }
+
+  .error-box { background: #2d1515; border: 1px solid #7f1d1d; border-radius: 10px; padding: 16px; color: #fca5a5; font-size: 13px; display: none; margin-top: 16px; }
+  .hint { font-size: 12px; color: #374151; margin-top: 8px; text-align: center; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">KR</div>
+  <div>
+    <div class="h1" style="font-size:18px;font-weight:700;color:#f1f5f9">Master Interlinker</div>
+    <div class="subtitle">Kings Research · Internal SEO Tool</div>
+  </div>
+  <div class="badge" id="totalBadge">Waiting for database...</div>
+</header>
+
+<div class="container">
+  
+  <div class="setup-section" id="setupSection">
+    <label id="setupLabel">Step 1: Load Your Link Database</label>
+    <p style="font-size: 13px; color: #94a3b8; margin-bottom: 12px;">Select all your KR-AllLinks CSV files at once to auto-generate the database.</p>
+    <input type="file" id="csvFileInput" accept=".csv" multiple style="color: white; font-size: 13px; cursor: pointer;" />
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat"><div class="num" id="repCount">0</div><div class="lbl">Reports</div></div>
+    <div class="stat"><div class="num" id="blogCount">0</div><div class="lbl">Blogs</div></div>
+    <div class="stat"><div class="num" id="pressCount">0</div><div class="lbl">Press Releases</div></div>
+    <div class="stat"><div class="num" id="totalCount">0</div><div class="lbl">Total Links</div></div>
+  </div>
+
+  <div class="input-section">
+    <label>Step 2: Paste Blog / Page Content</label>
+    <textarea id="blogContent" placeholder="Paste the full content of the page you want to add interlinks to...&#10;&#10;The AI will read it, understand the topic, and suggest the most relevant links from the Kings Research database with appropriate anchor texts."></textarea>
+    
+    <div class="options-row">
+      <div id="typeFilters" style="display:flex;flex-direction:column;gap:6px">
+        <div style="font-size:11px;color:#4b5563;text-transform:uppercase;letter-spacing:.5px">Include Link Types</div>
+        <div class="filter-group">
+          <button class="filter-btn active" data-type="report" onclick="toggleType(this)">📊 Reports</button>
+          <button class="filter-btn active" data-type="blog" onclick="toggleType(this)">📝 Blogs</button>
+          <button class="filter-btn active" data-type="press" onclick="toggleType(this)">📰 Press Releases</button>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="font-size:11px;color:#4b5563;text-transform:uppercase;letter-spacing:.5px">Suggestions</div>
+        <select class="count-select" id="countSelect">
+          <option value="10">10 links</option>
+          <option value="15" selected>15 links</option>
+          <option value="20">20 links</option>
+          <option value="25">25 links</option>
+        </select>
+      </div>
+      <button class="run-btn" id="runBtn" onclick="runInterlinker()" disabled>
+        <span>⚡</span> Find Interlinks
+      </button>
+    </div>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <div class="loading" id="loadingDiv">
+    <div class="spinner"></div>
+    <p id="loadingMsg">Scanning your content and matching links...</p>
+  </div>
+
+  <div class="results-section" id="resultsSection">
+    <div class="results-header">
+      <h2 id="resultsTitle">Interlink Suggestions</h2>
+      <button class="copy-all-btn" onclick="copyAll()">📋 Copy All as HTML</button>
+    </div>
+    <table id="resultsTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Anchor Text</th>
+          <th>URL</th>
+          <th>Type</th>
+          <th>Why This Link</th>
+          <th>Copy</th>
+        </tr>
+      </thead>
+      <tbody id="resultsBody"></tbody>
+    </table>
+    <div class="hint">Click any URL to open · Use "Copy All as HTML" to get ready-to-paste anchor tags</div>
+  </div>
+</div>
+
+<script>
+// --- GLOBAL VARIABLES ---
+let ALL_LINKS = []; 
+// API key is now safely stored in Vercel environment variables — no key in the browser!
+
+// --- CSV PARSING LOGIC ---
+document.getElementById('csvFileInput').addEventListener('change', async function(e) {
+  const files = e.target.files;
+  if (!files.length) return;
+  
+  let tempLinks = [];
+  
+  for (let file of files) {
+    const text = await file.text();
+    const lines = text.split('\n');
+    
+    for (let line of lines) {
+      // Basic CSV split, taking the first column (assuming it's the URL)
+      let url = line.split(',')[0].trim().replace(/"/g, '');
+      if (!url.startsWith('http')) continue; // Skip headers or empty lines
+      
+      // Auto-detect Type
+      let type = 'report';
+      if (url.includes('/blog/')) type = 'blog';
+      else if (url.includes('/press-release/')) type = 'press';
+      
+      // Auto-generate Keyword from URL slug
+      let slug = url.split('/').pop().split('?')[0];
+      let kw = slug.replace(/-\d+$/, ''); // Remove trailing IDs (e.g., "-3")
+      kw = kw.replace(/-/g, ' ').trim();  // Convert hyphens to spaces
+      
+      tempLinks.push({ url, type, kw });
+    }
+  }
+  
+  // Remove duplicate URLs if any across sheets
+  const uniqueUrls = new Set();
+  ALL_LINKS = tempLinks.filter(l => {
+    if(uniqueUrls.has(l.url)) return false;
+    uniqueUrls.add(l.url);
+    return true;
+  });
+
+  updateStats();
+  
+  // Update UI to show success
+  const setup = document.getElementById('setupSection');
+  setup.classList.add('success');
+  document.getElementById('setupLabel').innerHTML = `✓ Database Loaded Successfully`;
+  setup.querySelector('p').textContent = `Loaded ${ALL_LINKS.length} unique links. You can now use the tool.`;
+  document.getElementById('runBtn').disabled = false; // Enable the run button
+});
+
+function updateStats() {
+  const rep = ALL_LINKS.filter(l => l.type === 'report').length;
+  const blg = ALL_LINKS.filter(l => l.type === 'blog').length;
+  const prs = ALL_LINKS.filter(l => l.type === 'press').length;
+  document.getElementById('repCount').textContent  = rep.toLocaleString();
+  document.getElementById('blogCount').textContent = blg.toLocaleString();
+  document.getElementById('pressCount').textContent= prs.toLocaleString();
+  document.getElementById('totalCount').textContent= ALL_LINKS.length.toLocaleString();
+  document.getElementById('totalBadge').textContent= ALL_LINKS.length.toLocaleString() + ' links active';
+}
+
+// --- FILTER LOGIC ---
+let activeTypes = new Set(['report', 'blog', 'press']);
+function toggleType(btn) {
+  const t = btn.dataset.type;
+  if (activeTypes.has(t)) { activeTypes.delete(t); btn.classList.remove('active'); }
+  else { activeTypes.add(t); btn.classList.add('active'); }
+}
+
+// --- KEYWORD SCORING FOR AI EFFICIENCY ---
+function scoreLink(link, contentWords) {
+  const kwWords = link.kw.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+  let score = 0;
+  for (const kw of kwWords) {
+    if (contentWords.has(kw)) score += 2;
+    for (const cw of contentWords) {
+      if (cw.includes(kw) || kw.includes(cw)) score += 0.5;
+    }
+  }
+  return score;
+}
+
+function preFilter(content, maxLinks = 200) {
+  const stopWords = new Set(['this','that','with','from','have','will','been','they','their','which','when','what','your','about','more','into','than','also','some','other','these','those','such','most','like','just','over','after','before','then','each','only','even','well','back','very','much','both','through','should','could','would','make','made','being','there','where','here','were','them','many','come','work','need','take','used','uses','using']);
+  const words = content.toLowerCase().match(/\b[a-z]{4,}\b/g) || [];
+  const contentWords = new Set(words.filter(w => !stopWords.has(w)));
+  
+  const filtered = ALL_LINKS.filter(l => activeTypes.has(l.type));
+  const scored = filtered.map(l => ({ ...l, score: scoreLink(l, contentWords) }));
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, maxLinks).filter(l => l.score > 0);
+}
+
+// --- OPENAI API CALL ---
+async function runInterlinker() {
+  const content = document.getElementById('blogContent').value.trim();
+  if (!content || content.length < 50) {
+    showError('Please paste at least a paragraph of content before running.');
+    return;
+  }
+  if (ALL_LINKS.length === 0) {
+    showError('Please load your CSV files first.');
+    return;
+  }
+
+  const count = parseInt(document.getElementById('countSelect').value);
+  
+  document.getElementById('errorBox').style.display = 'none';
+  document.getElementById('resultsSection').style.display = 'none';
+  document.getElementById('loadingDiv').style.display = 'block';
+  document.getElementById('runBtn').disabled = true;
+
+  const loadingMsgs = [
+    'Reading your content...',
+    'Matching against database...',
+    'Selecting the best interlinking opportunities...',
+    'Generating anchor texts via AI...'
+  ];
+  let mi = 0;
+  const msgInterval = setInterval(() => {
+    mi = (mi + 1) % loadingMsgs.length;
+    document.getElementById('loadingMsg').textContent = loadingMsgs[mi];
+  }, 2200);
+
+  try {
+    const candidates = preFilter(content, 180);
+    if (candidates.length === 0) {
+      throw new Error('No relevant links found for this content based on keywords.');
+    }
+
+    const linksForPrompt = candidates.map(l => `[${l.type.toUpperCase()}] ${l.url}  (keywords: ${l.kw})`).join('\n');
+
+    const response = await fetch('/api/interlink', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        count,
+        content: content.substring(0, 8000),
+        links: linksForPrompt
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || 'API error — check your server logs on Vercel');
+    }
+
+    const data = await response.json();
+    let results = data.suggestions || [];
+
+    // Verbatim guard: Ensure the suggested anchor text ACTUALLY exists in the content
+    const contentLower = content.toLowerCase();
+    results = results.filter(r => (r.anchor || '').toLowerCase().trim().length > 0 && contentLower.includes(r.anchor.toLowerCase()));
+
+    clearInterval(msgInterval);
+    document.getElementById('loadingDiv').style.display = 'none';
+    document.getElementById('runBtn').disabled = false;
+    
+    if (results.length === 0) throw new Error('No exact anchor text matches found in your content.');
+    renderResults(results);
+
+  } catch (err) {
+    clearInterval(msgInterval);
+    document.getElementById('loadingDiv').style.display = 'none';
+    document.getElementById('runBtn').disabled = false;
+    showError(err.message || 'Something went wrong.');
+  }
+}
+
+// --- UI RENDERING ---
+function renderResults(results) {
+  const tbody = document.getElementById('resultsBody');
+  tbody.innerHTML = '';
+  document.getElementById('resultsTitle').textContent = `${results.length} Interlink Suggestions`;
+
+  results.forEach((r, i) => {
+    const typeClass = `type-${r.type}`;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="color:#374151;font-size:12px">${i + 1}</td>
+      <td class="anchor">${escHtml(r.anchor)}</td>
+      <td class="url"><a href="${escHtml(r.url)}" target="_blank" rel="noopener">${escHtml(r.url)}</a></td>
+      <td class="type ${typeClass}"><span>${r.type}</span></td>
+      <td class="reason">${escHtml(r.reason)}</td>
+      <td class="copy-cell"><button class="copy-link-btn" onclick="copyHtml('${escAttr(r.anchor)}','${escAttr(r.url)}',this)">Copy</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('resultsSection').style.display = 'block';
+}
+
+function copyHtml(anchor, url, btn) {
+  navigator.clipboard.writeText(`<a href="${url}">${anchor}</a>`).then(() => {
+    btn.textContent = '✓';
+    setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
+
+function copyAll() {
+  const links = Array.from(document.querySelectorAll('#resultsBody tr')).map(tr => {
+    return `<a href="${tr.querySelector('.url a').href}">${tr.querySelector('.anchor').textContent}</a>`;
+  });
+  navigator.clipboard.writeText(links.join('\n'));
+  const btn = document.querySelector('.copy-all-btn');
+  btn.textContent = '✓ All Copied!';
+  setTimeout(() => btn.textContent = '📋 Copy All as HTML', 1800);
+}
+
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  box.textContent = '⚠ ' + msg;
+  box.style.display = 'block';
+}
+
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(s) { return String(s).replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+</script>
+</body>
+</html>
